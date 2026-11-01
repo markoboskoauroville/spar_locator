@@ -18,3 +18,11 @@ The name exists in the data: spar.hr marks the big stores **INTERSPAR** (hyperma
 
 Meaning: the middle key of the bottom row (the pin icon) no longer opens the City panel; the City list goes away.
 The key asks for the location permission and centres the map on where he is, using GPS.
+
+## 1.11.2026, 21:50 (same session)
+
+> Other request, please. Make the Spar locator icon look like a logo-type official one from Spar.
+
+Passed on as: an icon in SPAR's own look (their red and green, the clean round shape) but not their fir-tree
+logo or wordmark copied, because the APK is published and a copied logo makes it look like SPAR's official app.
+If Marko wants the real logo anyway, he decides.
