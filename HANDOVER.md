@@ -17,8 +17,25 @@ was finished, are in `testing/round1/` (see ROUND 1 below). No v2 release exists
   tester. Proved 1.11.2026: spar.hr answers from the phone's network (200, 617092 bytes).
 - The cloud session reaches both with send_message (Marko allowed it 1.11.2026).
 
+**Round 1 (Mac, 21:28, `testing/round1/`):** v2 built in 49 s (9.5 MB debug), installed on the
+Nothing, no crash, live data from spar.hr, nothing under the camera hole. Found:
+- **No hours labels on the Zagreb map** (shot3). Every store was shut (All Saints, 21:29), but labels
+  must show for shut stores too ("–" or the day's hours): check `SparMap` (LABEL_ZOOM 12 vs the zoom
+  the city fit lands on) and fix.
+- The key-row icons have no content description (TalkBack, and tests tap by position).
+- Add `android:enableOnBackInvokedCallback="true"` to the manifest (predictive back).
+
+**Marko's three requests** (word for word in `momentaryupdates.md`, 21:40–21:50):
+1. **INTERSPAR different**: a different size AND colour per store size; the colour of the inside
+   ring still shows open (green) or shut (red).
+2. **The pin key = my location by GPS.** The City list goes. Needs the location permission
+   (verify.py check 8 allows only INTERNET today: change it with the reason).
+3. **An icon in SPAR's look** (their red and green, round), not their fir-tree logo copied, because the
+   APK is public; the real logo only if Marko decides so.
+
 **Next session, in order:**
-1. Read `testing/round1/NOTES.md` and the screenshots; fix what they show; raise appVersion; push.
+1. Do the round 1 fixes and Marko's three requests; raise appVersion; verify.py, Test 1, lint,
+   compileReleaseKotlin; push.
 2. Mac: pull, build, install on the Nothing, screenshots (first screen, City panel, Zagreb with
    labels, a store panel), camera-hole line, logcat.
 3. Phone: read Marko the hand test, one step at a time (pick Zagreb, tap a store, Route, back).
