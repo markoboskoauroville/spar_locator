@@ -18,7 +18,12 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-It works as-is on GitHub Pages: Settings → Pages → deploy from the branch root.
+## Publishing (GitHub Pages)
+
+The `Publish site` GitHub Action puts the map online at
+https://markoboskoauroville.github.io/spar_locator/ on every push.
+
+One-time setup: in the repository go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**. Then re-run the latest `Publish site` run from the **Actions** tab, or push any change.
 
 ## Data
 
@@ -28,4 +33,4 @@ It works as-is on GitHub Pages: Settings → Pages → deploy from the branch ro
 python3 scripts/fetch_stores.py
 ```
 
-The feed includes the weekly schedule, date-specific overrides (Sundays when stores may open, public holidays) and temporary closures. spar.hr only publishes overrides about two months ahead, so the data needs regular refreshing. The `Refresh store data` GitHub Action does this daily. spar.hr sits behind Cloudflare, so if the Action starts failing, run the script locally and commit the result.
+The feed includes the weekly schedule, date-specific overrides (Sundays when stores may open, public holidays) and temporary closures. spar.hr only publishes overrides about two months ahead, so the data needs regular refreshing. The `Publish site` Action re-downloads it every day at 03:17 UTC and republishes the site. spar.hr sits behind Cloudflare. If it blocks the download, the site keeps showing the last saved data; run the script on your own computer and commit the result.
