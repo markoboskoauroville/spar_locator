@@ -1,0 +1,249 @@
+{
+ "locationId": "17",
+ "address": "Avenija V. Holjevca 62",
+ "longitude": 15.988217,
+ "latitude": 45.754963,
+ "name": "INTERSPAR hipermarket Buzin Supernova",
+ "city": "Zagreb",
+ "zipCode": "10010",
+ "pageUrl": "/lokacije/interspar-hipermarket-zagreb-10010-avenija-v-holjevca-62",
+ "image": "/content/dam/sparhrwebsite/pictures/fotografije_trgovina/interspar-zg-buzinsupernovaavenijavholjevca62foto01.jpg/jcr:content/renditions/responsive.320.160.noborder.1b87d3c7cc00920d.jpg",
+ "shopHours": [
+  {
+   "openingHours": {
+    "dayType": "ponedjeljak",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "utorak",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "srijeda",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "četvrtak",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "petak",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "subota",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": "nedjelja",
+    "from1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 8,
+     "minute": 0,
+     "second": 0
+    },
+    "from2": null,
+    "to1": {
+     "year": 1970,
+     "month": 0,
+     "dayOfMonth": 1,
+     "hourOfDay": 21,
+     "minute": 0,
+     "second": 0
+    },
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "standard"
+   }
+  }
+ ],
+ "plantType": {
+  "id": 5,
+  "name": "INTERSPAR HIPERMARKET"
+ },
+ "nearbyLocations": null,
+ "telephone": "01/5510-840",
+ "specialShopHours": [
+  {
+   "openingHours": {
+    "dayType": {
+     "year": 2026,
+     "month": 10,
+     "dayOfMonth": 1,
+     "hourOfDay": 0,
+     "minute": 0,
+     "second": 0
+    },
+    "from1": null,
+    "from2": null,
+    "to1": null,
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "sonder"
+   }
+  },
+  {
+   "openingHours": {
+    "dayType": {
+     "year": 2026,
+     "month": 10,
+     "dayOfMonth": 15,
+     "hourOfDay": 0,
+     "minute": 0,
+     "second": 0
+    },
+    "from1": null,
+    "from2": null,
+    "to1": null,
+    "to2": null
+   },
+   "timeperiod": {
+    "timeperiodType": "sonder"
+   }
+  }
+ ],
+ "partlyClosed": null,
+ "temporarilyClosed": null,
+ "associatedStore": null,
+ "associatedCafe": null,
+ "closedDate": "",
+ "routeplaner": "https://maps.google.com/maps?cid=8389914032460748409",
+ "pwUebertragung": null,
+ "pwVorbestellung": null
+}

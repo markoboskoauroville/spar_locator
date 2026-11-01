@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Narrow, with the reason (android-app.md: narrow lint the session it cries wolf).
+     ObsoleteSdkInt says mipmap-anydpi-v26 should be mipmap-anydpi at minSdk 26. Done that way, AGP
+     8.7.3's resource merger leaves the adaptive icon out and AAPT fails with "mipmap/ic_launcher not
+     found" (measured 1.11.2026, clean build, no build cache). Only that folder is excused. -->
+<lint>
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+    </issue>
+</lint>

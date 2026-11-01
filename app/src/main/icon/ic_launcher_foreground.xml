@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Spar Locator, the launcher icon: what the map shows, once. A store's hours label (sand) over
+     its circle (green, open). Two shapes (app-icon.md §4), inside the 42-unit symbol box 33…75.
+     THIS IS A TEMPLATE: the build writes the version digits at the VERSION line (version-visible.md).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The hours label, with its point down to the store. -->
+    <path android:fillColor="#F2DDB4"
+        android:pathData="M43,34 H65 A6,6 0 0 1 71,40 A6,6 0 0 1 65,46 H57.5 L54,49.5 L50.5,46 H43 A6,6 0 0 1 37,40 A6,6 0 0 1 43,34 Z" />
+    <!-- The two numbers, as two short dark bars: a vector has no text. -->
+    <path android:strokeColor="#12161E" android:strokeWidth="2.2" android:strokeLineCap="round"
+        android:pathData="M44,40 H51 M57,40 H64" />
+    <!-- The store: an open one, green, ringed in the ground colour. -->
+    <path android:fillColor="#34D399" android:strokeColor="#12161E" android:strokeWidth="1.6"
+        android:pathData="M54,51.5 a7,7 0 1 0 0.01,0 Z" />
+    <!--VERSION-->
+</vector>

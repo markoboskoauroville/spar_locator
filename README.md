@@ -1,36 +1,39 @@
-# SPAR Locator
+# Spar Locator
 
-A one-page map of every SPAR store in Croatia (SPAR supermarkets and INTERSPAR hypermarkets), built on OpenStreetMap.
+An Android app: every SPAR and INTERSPAR in Croatia on OpenStreetMap. Choose your city; each store
+is a circle, **green when it is open now, red when it is shut**, with today's opening and closing
+hours above it (`7–21`; `–` when it does not open today). Open and shut are Croatian time and change
+on the minute, including public holidays, the Sundays a shop may open, and shops shut for renovation.
 
-- Pick your city at the top and the map zooms to it.
-- Each store is a circle: **green = open now**, **red = closed now**. INTERSPAR stores are the bigger circles.
-- The label above each circle shows today's hours, e.g. `7–21`. `–` means closed all day (Sunday, a public holiday or a renovation).
-- Click a store to see its address, phone number and this week's hours.
+Tap a store for its address, phone and this week's hours, and **Route** to open it in your maps app.
 
-"Now" always means Croatian time (Europe/Zagreb), wherever you are. The colours update every 30 seconds.
+## How to install
 
-## Running it
+Download the latest APK on the phone and open it:
+**https://github.com/markoboskoauroville/spar_locator/releases/latest**
 
-It is a static site with no build step:
+The first builds are test builds signed with a throwaway key until `SPAR_KEYSTORE` is set (see
+HANDOVER.md). Such a build must be uninstalled before the next one is installed.
+
+## Where the data comes from
+
+The list behind https://www.spar.hr/lokacije/ , asked from the phone (`Source.kt`). The last good
+answer is kept on the phone, and a copy read on 1.11.2026 is built into the APK, so the app works
+without a signal. spar.hr publishes holiday hours about two months ahead.
+
+## How it is built
+
+Kotlin, Jetpack Compose, VTM (mapsforge's OpenGL map renderer) with OpenStreetMap's tiles, in the
+Trail design language of MANTRA_MANIFEST. Built and released by GitHub Actions
+(`.github/workflows/build-apk.yml`): gates G1, G2, G3 (`scripts/verify.py`), G5, Test 1, the signed
+APK, release `vN` as `N-spar-locator-vN.apk`, the two newest kept. The version is `appVersion` in
+`gradle.properties`, and every change raises it.
+
+Checks to run before a push:
 
 ```sh
-python3 -m http.server 8000
-# open http://localhost:8000
+python3 scripts/verify.py
+./gradlew :app:testReleaseUnitTest :app:lintRelease :app:compileReleaseKotlin
 ```
 
-## Publishing (GitHub Pages)
-
-The `Publish site` GitHub Action puts the map online at
-https://markoboskoauroville.github.io/spar_locator/ on every push.
-
-One-time setup: in the repository go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions**. Then re-run the latest `Publish site` run from the **Actions** tab, or push any change.
-
-## Data
-
-`data/stores.json` is generated from the store feed behind https://www.spar.hr/lokacije/:
-
-```sh
-python3 scripts/fetch_stores.py
-```
-
-The feed includes the weekly schedule, date-specific overrides (Sundays when stores may open, public holidays) and temporary closures. spar.hr only publishes overrides about two months ahead, so the data needs regular refreshing. The `Publish site` Action re-downloads it every day at 03:17 UTC and republishes the site. spar.hr sits behind Cloudflare. If it blocks the download, the site keeps showing the last saved data; run the script on your own computer and commit the result.
+Map data © OpenStreetMap contributors. Store data: spar.hr. Not affiliated with SPAR.
