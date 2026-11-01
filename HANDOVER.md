@@ -32,9 +32,11 @@ the icon and in the city panel, the workflow's gates.
 
 ## Left to do
 
-1. **The permanent signing key** (updatable.md). Until the secrets exist every build is signed with a
-   throwaway key and will not install over the last one. On the phone (android-app.md §3) make a
-   PKCS12 with alias `spar`, then: `gh secret set SPAR_KEYSTORE < <(base64 -w0 spar.p12)` and
-   `gh secret set SPAR_KEYSTORE_PASSWORD`. Uninstall the test build once, then never again.
+1. **Signing: the Mac's key** (android-app.md §1b, decided 1.11.2026). From v2 the APK is built on
+   Marko's Mac ("BUILD YOUR APK HERE" session) and signed with the Mac's debug key
+   (~/.android/debug.keystore), released by the Mac as `vN`, Latest. GitHub Actions runs by hand only,
+   so it never races the Mac. v1 (GitHub, throwaway key) must be uninstalled once; after that every
+   Mac build installs over the last. If CI must ever build again, it needs SPAR_KEYSTORE holding the
+   SAME key the Mac signs with, or the phone will refuse the update.
 2. Tests 2–4 on the phone (DELIVERY_RECORD.md, NOT TESTED).
 3. `going-public.md`: the repository is public; history scanned 1.11.2026 (see DELIVERY_RECORD.md).

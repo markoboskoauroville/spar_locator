@@ -10,9 +10,12 @@
 
 name: Build Spar Locator
 
+# BY HAND ONLY (Marko, 1.11.2026: "You can use my Mac to build the app"). The Mac builds first
+# (android-app.md §1b) and signs with its own key; a push that also started this workflow would
+# race it with a different key, the race Mantra Manual Camera lost at v145 (android-app.md §1c).
+# Run it from the Actions tab only when the Mac cannot be reached.
 on:
   workflow_dispatch:
-  push:
 
 permissions:
   contents: write
