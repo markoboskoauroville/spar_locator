@@ -1,5 +1,29 @@
 # Handover — Spar Locator
 
+## PARKED (1.11.2026, about 20:40) — start here
+
+**State:** v2 (`appVersion=2`) is the code on branch `ccr-15fc9f4b-bi08v4`. v1 was built by GitHub
+Actions (release v1, throwaway key). v2 is being built on Marko's Mac; round 1's results, whatever
+was finished, are in `testing/round1/` (see ROUND 1 below). No v2 release exists yet.
+
+**How the work is split** (Marko, 1.11.2026), the three sessions:
+- **cloud session** (this one, "Spar locator map"): writes the code, coordinates, builds nothing.
+- **Mac, "BUILD YOUR APK HERE"**: clone at `~/Developer/spar_locator`; builds with
+  `JAVA_HOME=$(/usr/libexec/java_home -v 17) ./gradlew assembleDebug`, installs over wireless adb on
+  the **Nothing Phone 2a** (`_adb-tls-connect` instance `adb-0005534BC000140-…`; resolve with
+  `dns-sd -L`, then `adb connect`). **Not** the Pixel 7 on USB (41241FDH2S10SJ). Screenshots go to
+  `testing/roundN/` on the branch.
+- **phone, "im markos nothing phone 2a"**: Marko's voice (`talk say --en`) and the real-network
+  tester. Proved 1.11.2026: spar.hr answers from the phone's network (200, 617092 bytes).
+- The cloud session reaches both with send_message (Marko allowed it 1.11.2026).
+
+**Next session, in order:**
+1. Read `testing/round1/NOTES.md` and the screenshots; fix what they show; raise appVersion; push.
+2. Mac: pull, build, install on the Nothing, screenshots (first screen, City panel, Zagreb with
+   labels, a store panel), camera-hole line, logcat.
+3. Phone: read Marko the hand test, one step at a time (pick Zagreb, tap a store, Route, back).
+4. When Marko says good: the Mac releases `vN` as `N-spar-locator-vN.apk`, `--latest`, keeps two.
+
 ## State (1.11.2026, v1)
 
 An Android app replacing the first web version (index.html on GitHub Pages, removed in this change).
