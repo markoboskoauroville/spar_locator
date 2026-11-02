@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- The store list from spar.hr and OpenStreetMap's tiles. Nothing else: no location, no
-         storage, no notifications. -->
+    <!-- The store list from spar.hr and OpenStreetMap's tiles; and where the phone is, asked only
+         when the pin key is pressed (Marko, 1.11.2026: "the pin key = my location by GPS").
+         No storage, no notifications. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
         android:allowBackup="false"

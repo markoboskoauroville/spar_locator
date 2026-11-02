@@ -39,6 +39,8 @@ class SparMap(context: Context, private val onTap: (Store) -> Unit) {
     private val map: Map get() = view.map()
     private val marks = Marks(context.resources.displayMetrics.density)
     private var storeLayer: ItemizedLayer? = null
+    private var meLayer: ItemizedLayer? = null
+    private var me: GeoPoint? = null
 
     private var stores: List<Store> = emptyList()
     private var now: LocalDateTime = LocalDateTime.now(Stores.ZONE)
@@ -46,6 +48,7 @@ class SparMap(context: Context, private val onTap: (Store) -> Unit) {
 
     /** A fly-to asked for before the view had a size, done at its first layout. */
     private var pendingFit: List<Store>? = null
+    private var pendingMe: GeoPoint? = null
 
     private val taps = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
@@ -82,6 +85,7 @@ class SparMap(context: Context, private val onTap: (Store) -> Unit) {
             if (w > 0 && h > 0 && (w != oldRight - oldLeft || h != oldBottom - oldTop)) view.post {
                 load()
                 pendingFit?.let { pendingFit = null; fit(it) }
+                pendingMe?.let { pendingMe = null; flyTo(it) }
             }
         }
         // Zoomed in far enough, the hours appear above the circles; zoomed out, only the circles.
@@ -130,7 +134,39 @@ class SparMap(context: Context, private val onTap: (Store) -> Unit) {
         )
         map.layers().add(layer)
         storeLayer = layer
+        drawMe()
+    }
+
+    /** The blue dot, always above the stores, so it is put on after them every time. */
+    private fun drawMe() {
+        meLayer?.let { map.layers().remove(it) }
+        meLayer = null
+        val at = me
+        if (at != null) {
+            val dot = marks.me()
+            val symbol = MarkerSymbol(AndroidBitmap(dot.bitmap), dot.x, dot.y, true)
+            val item = MarkerItem("me", "me", "", at).apply { marker = symbol }
+            val layer = ItemizedLayer(map, mutableListOf<MarkerInterface>(item), symbol, null)
+            map.layers().add(layer)
+            meLayer = layer
+        }
         map.updateMap(true)
+    }
+
+    /** WHERE I AM: put the blue dot there and fly to it, close enough to read the hours. */
+    fun showMe(lat: Double, lon: Double) {
+        val at = GeoPoint(lat, lon)
+        me = at
+        drawMe()
+        if (view.width == 0 || view.height == 0) {
+            pendingMe = at
+            return
+        }
+        flyTo(at)
+    }
+
+    private fun flyTo(at: GeoPoint) {
+        map.animator().animateTo(600, MapPosition(at.latitude, at.longitude, (1 shl ME_ZOOM).toDouble()))
     }
 
     /**
@@ -189,5 +225,8 @@ class SparMap(context: Context, private val onTap: (Store) -> Unit) {
     companion object {
         /** From this zoom (about a city's width on a phone) the hours are written above the circles. */
         const val LABEL_ZOOM = 12
+
+        /** Where I am is shown at this zoom: a few streets around, the stores' hours written. */
+        const val ME_ZOOM = 14
     }
 }

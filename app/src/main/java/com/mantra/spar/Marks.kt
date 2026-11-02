@@ -70,6 +70,19 @@ class Marks(private val density: Float) {
         return Mark(bitmap, cx / width, cy / height)
     }
 
+    /** WHERE I AM: a blue dot in a white ring, the colour no store has. */
+    fun me(): Mark = kept.getOrPut("me") {
+        val radius = dp(8f)
+        val ring = dp(3f)
+        val size = (2 * (radius + ring)).toInt() + 2
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val c = size / 2f
+        canvas.drawCircle(c, c, radius + ring, Brush(Brush.ANTI_ALIAS_FLAG).apply { color = WHITE })
+        canvas.drawCircle(c, c, radius, Brush(Brush.ANTI_ALIAS_FLAG).apply { color = BLUE })
+        Mark(bitmap, 0.5f, 0.5f)
+    }
+
     /** How far above and below its point a store's picture reaches, in pixels, for taps. */
     fun reachUp(label: Boolean): Float = dp(if (label) 36f else 14f)
     fun reachDown(): Float = dp(14f)
@@ -80,5 +93,7 @@ class Marks(private val density: Float) {
         const val GREEN = 0xFF34D399.toInt()
         const val RED = 0xFFEF4444.toInt()
         const val GROUND = 0xFF0B0D10.toInt()
+        const val BLUE = 0xFF3B82F6.toInt()
+        const val WHITE = 0xFFFFFFFF.toInt()
     }
 }

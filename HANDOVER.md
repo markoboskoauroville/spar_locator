@@ -1,5 +1,20 @@
 # Handover — Spar Locator
 
+## v3 (2.11.2026, phone session) — request 2 done in code, NOT YET COMPILED
+
+Marko asked again on the phone: "the pin between plus and minus shows my current location, instead
+of the list of cities." Done on this branch as `appVersion=3`:
+- Pin key → location permission (asked on the first press only) → last known place at once, then a
+  fresh fix (`LocationManagerCompat.getCurrentLocation`, fused → GPS → network, no Google Play);
+  blue dot (`Marks.me`) on its own layer above the stores; map flies there at zoom 14 (`ME_ZOOM`).
+  Pin key lit amber while it looks. Location off → toast + the system's location settings.
+- City panel, `Face.City`, the saved city and the globe icon removed; the top line is all Croatia.
+- The origin line and the version link moved to the bottom of the store panel.
+- verify.py: check 8 allows the two location permissions, check 5 needs one panel. 47/47 pass.
+**Not compiled**: the phone has no Android toolchain and CI must not race the Mac's key. Next: the
+Mac builds (`assembleDebug`, lint), installs on the Nothing, Marko presses the pin.
+Requests 1 and 3 and the round 1 fixes are still open.
+
 ## PARKED (1.11.2026, about 20:40) — start here
 
 **State:** v2 (`appVersion=2`) is the code on branch `ccr-15fc9f4b-bi08v4`. v1 was built by GitHub

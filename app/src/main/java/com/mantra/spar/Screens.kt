@@ -20,8 +20,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
@@ -53,7 +51,6 @@ import java.time.temporal.TemporalAdjusters
 /** Which face is over the map. */
 sealed interface Face {
     data object None : Face
-    data object City : Face
     data class Shop(val store: Store) : Face
 }
 
@@ -123,9 +120,9 @@ fun BoxScope.TopLine(place: String, open: Int, total: Int, now: LocalDateTime) {
     )
 }
 
-/** THE KEY ROW: icons only, one per key, lit keys amber. */
+/** THE KEY ROW: icons only, one per key, lit keys amber. The pin is lit while it looks for me. */
 @Composable
-fun BoxScope.KeyRow(cityOpen: Boolean, onZoomOut: () -> Unit, onCity: () -> Unit, onZoomIn: () -> Unit) {
+fun BoxScope.KeyRow(locating: Boolean, onZoomOut: () -> Unit, onPin: () -> Unit, onZoomIn: () -> Unit) {
     Row(
         Modifier
             .align(Alignment.BottomCenter)
@@ -138,7 +135,7 @@ fun BoxScope.KeyRow(cityOpen: Boolean, onZoomOut: () -> Unit, onCity: () -> Unit
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Key(R.drawable.ic_minus, lit = false, onZoomOut)
-        Key(R.drawable.ic_pin, lit = cityOpen, onCity)
+        Key(R.drawable.ic_pin, lit = locating, onPin)
         Key(R.drawable.ic_plus, lit = false, onZoomIn)
     }
 }
@@ -194,47 +191,17 @@ fun Panel(
     }
 }
 
-/** One city in the list, with how many of its stores are open now. */
-data class CityRow(val name: String?, val stores: Int, val open: Int)
-
-/** THE CITY: pick where you are. "All of Croatia" first, then every city A to Ž. */
+/** A STORE: where it is, this week's hours with today bright, and the way there. */
 @Composable
-fun CityPanel(
-    rows: List<CityRow>,
-    chosen: String?,
+fun StorePanel(
+    store: Store,
+    now: LocalDateTime,
     origin: String,
     version: String,
-    onPick: (String?) -> Unit,
+    onRoute: () -> Unit,
     onVersion: () -> Unit,
     onClose: () -> Unit,
 ) {
-    Panel("City", R.drawable.ic_pin, onClose) {
-        LazyColumn(Modifier.weight(1f, fill = false)) {
-            items(rows, key = { it.name ?: "" }) { row ->
-                Pick(
-                    title = row.name ?: "All of Croatia",
-                    icon = if (row.name == null) R.drawable.ic_globe else null,
-                    chosen = row.name == chosen,
-                    under = "${row.stores} · ${row.open} open",
-                    onClick = { onPick(row.name) },
-                )
-                Hairline(inset = 24.dp)
-            }
-        }
-        // Where the list came from, and the version: small, dim, the version a hidden link.
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Line(origin, Paint.Dim, size = 12, modifier = Modifier.weight(1f))
-            Line(version, Paint.Dim, size = 12, modifier = Modifier.clickable(onClick = onVersion).padding(8.dp))
-        }
-    }
-}
-
-/** A STORE: where it is, this week's hours with today bright, and the way there. */
-@Composable
-fun StorePanel(store: Store, now: LocalDateTime, onRoute: () -> Unit, onClose: () -> Unit) {
     val today = now.toLocalDate()
     Panel(store.name, null, onClose) {
         Column(
@@ -265,6 +232,15 @@ fun StorePanel(store: Store, now: LocalDateTime, onRoute: () -> Unit, onClose: (
             }
         }
         Action("Route", R.drawable.ic_route, onRoute, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp))
+        // Where the list came from, and the version: small, dim, the version a hidden link.
+        // Here since v3, when the City panel that held them went.
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Line(origin, Paint.Dim, size = 12, modifier = Modifier.weight(1f))
+            Line(version, Paint.Dim, size = 12, modifier = Modifier.clickable(onClick = onVersion).padding(8.dp))
+        }
     }
 }
 

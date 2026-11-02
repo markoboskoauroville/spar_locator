@@ -14,7 +14,6 @@ ICONS = {
     "check": "M5 12.5l4.5 4.5L19 7",
     "chevron": "M9 6l6 6-6 6",
     "chevron_down": "M6 9l6 6 6-6",
-    "globe": "M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z M3 12h18 M12 3c3 3 3 15 0 18 M12 3c-3 3-3 15 0 18",
     "route": "M6 5a2 2 0 1 0 0 4a2 2 0 1 0 0-4z M18 15a2 2 0 1 0 0 4a2 2 0 1 0 0-4z M8 7h7a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h7",
 }
 SVG = '''<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{d}"/></svg>

@@ -75,7 +75,7 @@ check(nested == 0, f"comments opening a nested comment: {nested}")
 screens = kotlin.get("Screens.kt", "")
 panels = len(re.findall(r"\bPanel\(", screens)) - 1  # minus the definition
 titles_with_close = len(re.findall(r"R\.drawable\.ic_close", screens))
-check(panels >= 2, f"panels on the screen: {panels}")
+check(panels >= 1, f"panels on the screen: {panels} (the City panel went in v3)")
 check(titles_with_close == 1 and "fun Panel(" in screens, "every panel's close comes from one Panel title row")
 
 # 6. One whole number, written once (versioning.md).
@@ -89,10 +89,12 @@ check("<!--VERSION-->" in (ROOT / "app/src/main/icon/ic_launcher_foreground.xml"
 check("https://github.com/markoboskoauroville/spar_locator/releases/latest" in screens,
       "the version row links to this repository's latest release")
 
-# 8. The app asks for the network and nothing else.
+# 8. The app asks for the network and the phone's location, nothing else. Location since v3:
+#    Marko, 1.11.2026, "the pin key = my location by GPS"; asked only when the pin is pressed.
 manifest = (ROOT / "app/src/main/AndroidManifest.xml").read_text()
 perms = re.findall(r'uses-permission android:name="([^"]+)"', manifest)
-check(perms == ["android.permission.INTERNET"], f"permissions: {perms}")
+check(perms == ["android.permission.INTERNET", "android.permission.ACCESS_FINE_LOCATION",
+               "android.permission.ACCESS_COARSE_LOCATION"], f"permissions: {perms}")
 
 # 9. No key in the source, of any shape (secrets.md, going-public.md).
 shape = re.compile(r"AQ\.[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|sk-ant-[A-Za-z0-9_-]{20,}|gsk_[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,}")

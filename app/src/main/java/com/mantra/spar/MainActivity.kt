@@ -1,14 +1,21 @@
 package com.mantra.spar
 
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
+import android.os.CancellationSignal
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
@@ -16,6 +23,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -28,9 +37,9 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * SPAR LOCATOR. Choose the city you are in; every SPAR there is a circle on OpenStreetMap, green
- * when it is open now and red when it is shut, with today's opening and closing hours above it.
- * Open and shut are Croatian time, recomputed on every minute.
+ * SPAR LOCATOR. Every SPAR in Croatia is a circle on OpenStreetMap, green when it is open now and
+ * red when it is shut, with today's opening and closing hours above it. The pin key shows where the
+ * phone is (v3, replacing the City list). Open and shut are Croatian time, recomputed every minute.
  */
 class MainActivity : ComponentActivity() {
 
@@ -39,25 +48,28 @@ class MainActivity : ComponentActivity() {
 
     private var loaded by mutableStateOf<Source.Loaded?>(null)
     private var now by mutableStateOf(LocalDateTime.now(Stores.ZONE))
-    private var city by mutableStateOf<String?>(null)
+    private var locating by mutableStateOf(false)
     private var face by mutableStateOf<Face>(Face.None)
     private var fetching = false
     private var lastTry = 0L
+
+    /** The location permission, asked the first time the pin is pressed and never before. */
+    private val ask = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        if (granted.values.any { it }) locate() else say("Location not allowed")
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Edge to edge: the map reaches the glass; Overlay pads every control back inside.
         enableEdgeToEdge()
         source = Source(this)
-        city = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_CITY, null)
         map = SparMap(this) { store -> face = Face.Shop(store) }
 
         // What is on the phone at once, so the first frame already has every store; spar.hr after.
         val local = source.local()
         loaded = local
-        if (city != null && local.stores.none { it.city == city }) city = null
         map.show(local.stores, now)
-        map.fit(shown())
+        map.fit(local.stores)
         refresh()
 
         // THE CLOCK: on every minute, while the app is in front. The one while(true) in the app,
@@ -83,7 +95,7 @@ class MainActivity : ComponentActivity() {
         if (stale && System.currentTimeMillis() - lastTry > RETRY_MS) refresh()
     }
 
-    /** spar.hr, off the main thread. A failure keeps what is shown and says so in the city panel. */
+    /** spar.hr, off the main thread. A failure keeps what is shown and says so in the store panel. */
     private fun refresh() {
         if (fetching) return
         fetching = true
@@ -93,7 +105,6 @@ class MainActivity : ComponentActivity() {
             fetching = false
             if (fresh != null) {
                 loaded = fresh
-                if (city != null && fresh.stores.none { it.city == city }) city = null
                 map.show(fresh.stores, now)
             }
         }
@@ -101,14 +112,64 @@ class MainActivity : ComponentActivity() {
 
     private fun stores(): List<Store> = loaded?.stores.orEmpty()
 
-    private fun shown(): List<Store> = city?.let { c -> stores().filter { it.city == c } } ?: stores()
+    private fun allowed(): Boolean =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    private fun choose(c: String?) {
-        city = c
-        getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(KEY_CITY, c).apply()
+    /** THE PIN KEY: where am I. The permission first, if it was never given. */
+    private fun pin() {
         face = Face.None
-        map.fit(shown())
+        if (allowed()) locate()
+        else ask.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
+
+    /**
+     * WHERE AM I, without Google Play: the last place the phone knew is shown at once, then a fresh
+     * fix replaces it (fused if the phone has it, else GPS, else the network; the compat call gives
+     * up after 30 s on its own). The permission is checked here, in the same function as the calls
+     * that need it, so lint sees it.
+     */
+    private fun locate() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) return
+        val lm = getSystemService(LocationManager::class.java) ?: return
+        val on = lm.getProviders(true)
+        var last: Location? = null
+        try {
+            for (p in on) {
+                val l = lm.getLastKnownLocation(p) ?: continue
+                if (last == null || l.time > last.time) last = l
+            }
+        } catch (e: SecurityException) {
+            say("Location not allowed")
+            return
+        }
+        last?.let { map.showMe(it.latitude, it.longitude) }
+        val provider = listOf(FUSED, LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER).firstOrNull { it in on }
+        if (provider == null) {
+            if (last == null) {
+                say("Location is off")
+                open(Settings.ACTION_LOCATION_SOURCE_SETTINGS, intent = true)
+            }
+            return
+        }
+        locating = true
+        val hadLast = last != null
+        try {
+            // A real signal, not null: core 1.15 has two overloads and null matches both.
+            LocationManagerCompat.getCurrentLocation(lm, provider, CancellationSignal(), ContextCompat.getMainExecutor(this)) { fix ->
+                locating = false
+                if (fix != null) map.showMe(fix.latitude, fix.longitude)
+                else if (!hadLast) say("No location yet")
+            }
+        } catch (e: SecurityException) {
+            locating = false
+            say("Location not allowed")
+        }
+    }
+
+    private fun say(text: String) = Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
 
     private fun origin(): String {
         val l = loaded ?: return ""
@@ -121,9 +182,9 @@ class MainActivity : ComponentActivity() {
         return if (l.origin != Source.Origin.LIVE && source.lastProblem != null) "$said · offline" else said
     }
 
-    private fun open(url: String) {
+    private fun open(url: String, intent: Boolean = false) {
         try {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            startActivity(if (intent) Intent(url) else Intent(Intent.ACTION_VIEW, Uri.parse(url)))
         } catch (e: ActivityNotFoundException) {
             Toast.makeText(this, "No app can open $url", Toast.LENGTH_LONG).show()
         }
@@ -137,34 +198,29 @@ class MainActivity : ComponentActivity() {
     @androidx.compose.runtime.Composable
     private fun Screen() {
         val all = stores()
-        val here = shown()
         BackHandler(enabled = face != Face.None) { face = Face.None }
         Box(Modifier.fillMaxSize()) {
             AndroidView(factory = { map.view }, modifier = Modifier.fillMaxSize())
             Overlay {
-                TopLine(city ?: "Croatia", Stores.openCount(here, now), here.size, now)
+                TopLine("Croatia", Stores.openCount(all, now), all.size, now)
                 KeyRow(
-                    cityOpen = face == Face.City,
+                    locating = locating,
                     onZoomOut = { map.zoomOut() },
-                    onCity = { face = if (face == Face.City) Face.None else Face.City },
+                    onPin = ::pin,
                     onZoomIn = { map.zoomIn() },
                 )
             }
             when (val f = face) {
                 Face.None -> Unit
-                Face.City -> CityPanel(
-                    rows = listOf(CityRow(null, all.size, Stores.openCount(all, now))) +
-                        Stores.cities(all).map { c ->
-                            CityRow(c.name, c.stores, Stores.openCount(all.filter { it.city == c.name }, now))
-                        },
-                    chosen = city,
+                is Face.Shop -> StorePanel(
+                    f.store,
+                    now,
                     origin = origin(),
                     version = "v${BuildConfig.VERSION_NAME}",
-                    onPick = ::choose,
+                    onRoute = { route(f.store) },
                     onVersion = { open(LATEST_BUILD) },
                     onClose = { face = Face.None },
                 )
-                is Face.Shop -> StorePanel(f.store, now, onRoute = { route(f.store) }, onClose = { face = Face.None })
             }
         }
     }
@@ -185,8 +241,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private companion object {
-        const val PREFS = "spar"
-        const val KEY_CITY = "city"
+        /** LocationManager.FUSED_PROVIDER, written out: the constant is Android 12's, the app runs from 8. */
+        const val FUSED = "fused"
         const val RETRY_MS = 10L * 60 * 1000
         val STAMP: DateTimeFormatter = DateTimeFormatter.ofPattern("d.M. HH:mm")
     }
