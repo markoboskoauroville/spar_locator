@@ -119,7 +119,10 @@ android {
         checkReleaseBuilds = true
         htmlReport = false
         xmlReport = true
-        disable += setOf("GradleDependency", "NewerVersionAvailable", "ObsoleteLintCustomCheck")
+        // OldTargetApi (2.11.2026): lint learned of Android 16 (API 36); moving targetSdk is a
+        // decision with its own test round, not something a lint update decides. Same kind as the two
+        // "a newer version exists" checks beside it.
+        disable += setOf("GradleDependency", "NewerVersionAvailable", "ObsoleteLintCustomCheck", "OldTargetApi")
     }
 
     compileOptions {
