@@ -84,9 +84,15 @@ class StoresTest {
     }
 
     @Test fun `the bundled list is the store list`() {
-        val bundled = listOf("src/main/assets/spar_stores.json", "app/src/main/assets/spar_stores.json")
+        val bundled = listOf("src/spar/assets/spar_stores.json", "app/src/spar/assets/spar_stores.json")
             .map(::File).first { it.exists() }.readText()
         assertTrue(Stores.parse(bundled).size >= Stores.ENOUGH)
+    }
+
+    @Test fun `dm's bundled list is the store list`() {
+        val bundled = listOf("src/dm/assets/dm_stores.json", "app/src/dm/assets/dm_stores.json")
+            .map(::File).first { it.exists() }.readText()
+        assertEquals(179, Stores.parse(bundled).size)
     }
 
     // --- the labels --------------------------------------------------------------------------
