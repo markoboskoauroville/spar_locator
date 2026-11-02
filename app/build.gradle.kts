@@ -9,6 +9,11 @@ plugins {
 // One number, read from gradle.properties, turned into every other form of itself.
 val appVersion = (project.findProperty("appVersion") as String? ?: "1").trim().toInt()
 
+// THE GITHUB EDITION (Marko, 2.11.2026: "build it there with different signature, I will have 2
+// different apps"). -PghBuild gives it its own id and name, so it installs beside the Mac's build,
+// signed with GitHub's own key (secret SPAR_GH_KEYSTORE). Without the flag nothing changes.
+val ghBuild = project.hasProperty("ghBuild")
+
 // The signing key is a repository secret restored by the workflow (android-app.md §3,
 // updatable.md). Locally the file is absent and the release build falls back to unsigned.
 val keystoreProperties = Properties().apply {
@@ -69,7 +74,8 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.mantra.spar"
+        applicationId = if (ghBuild) "com.mantra.spar.gh" else "com.mantra.spar"
+        manifestPlaceholders["appLabel"] = if (ghBuild) "Spar GH" else "@string/app_name"
         minSdk = 26
         targetSdk = 35
         versionCode = appVersion
