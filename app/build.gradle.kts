@@ -8,6 +8,8 @@ plugins {
 
 // One number, read from gradle.properties, turned into every other form of itself.
 val appVersion = (project.findProperty("appVersion") as String? ?: "1").trim().toInt()
+// DM Finder's own number (2.11.2026), in the same file, by the same rules.
+val dmVersion = (project.findProperty("dmVersion") as String? ?: "1").trim().toInt()
 
 // THE GITHUB EDITION (Marko, 2.11.2026: "build it there with different signature, I will have 2
 // different apps"). -PghBuild gives it its own id and name, so it installs beside the Mac's build,
@@ -25,8 +27,10 @@ val keystoreProperties = Properties().apply {
 // app/build.gradle.kts. A vector drawable has no text, so the number is drawn as segment strokes
 // under the symbol, inside the 42-unit symbol box (app-icon.md). The template is src/main/icon;
 // the icon the app ships is generated from it here, never edited per version.
-val versionIconDir = layout.buildDirectory.dir("generated/versionIcon").get().asFile
-run {
+// One generated folder per flavour: Spar's template (src/main/icon) with Spar's number, dm's
+// (src/dm/icon) with dm's.
+fun versionIcon(flavour: String, version: Int, templatePath: String): File {
+    val versionIconDir = layout.buildDirectory.dir("generated/versionIcon/$flavour").get().asFile
     val segments = mapOf(
         'a' to "M0,0 H5", 'b' to "M5,0 V5", 'c' to "M5,5 V10", 'd' to "M0,10 H5",
         'e' to "M0,5 V10", 'f' to "M0,0 V5", 'g' to "M0,5 H5"
@@ -35,7 +39,7 @@ run {
         '0' to "abcdef", '1' to "bc", '2' to "abged", '3' to "abgcd", '4' to "fgbc",
         '5' to "afgcd", '6' to "afgedc", '7' to "abc", '8' to "abcdefg", '9' to "abcdfg"
     )
-    val text = "v$appVersion"
+    val text = "v$version"
     val cell = 5.0
     val gap = 2.2
     val width = text.length * cell + (text.length - 1) * gap
@@ -63,29 +67,63 @@ run {
             .append("android:strokeLineCap=\"round\" android:strokeLineJoin=\"round\" ")
             .append("android:pathData=\"").append(moved).append("\" />\n")
     }
-    val template = file("src/main/icon/ic_launcher_foreground.xml").readText()
+    val template = file(templatePath).readText()
     val out = File(versionIconDir, "drawable/ic_launcher_foreground.xml")
     out.parentFile.mkdirs()
-    out.writeText(template.replace("    <!--VERSION-->\n", "    <!-- v$appVersion, generated -->\n$paths"))
+    out.writeText(template.replace("    <!--VERSION-->\n", "    <!-- v$version, generated -->\n$paths"))
+    return versionIconDir
 }
+val sparIcon = versionIcon("spar", appVersion, "src/main/icon/ic_launcher_foreground.xml")
+val dmIcon = versionIcon("dm", dmVersion, "src/dm/icon/ic_launcher_foreground.xml")
 
 android {
     namespace = "com.mantra.spar"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = if (ghBuild) "com.mantra.spar.gh" else "com.mantra.spar"
-        manifestPlaceholders["appLabel"] = if (ghBuild) "Spar GH" else "@string/app_name"
         minSdk = 26
         targetSdk = 35
-        versionCode = appVersion
-        versionName = appVersion.toString()
+    }
+
+    // TWO SHOPS, ONE APP (2.11.2026): the same map, pin and panels; each flavour brings its shop's
+    // list, name, id, number and icon. The Mac's Spar Locator keeps com.mantra.spar.
+    flavorDimensions += "shop"
+    productFlavors {
+        create("spar") {
+            dimension = "shop"
+            applicationId = if (ghBuild) "com.mantra.spar.gh" else "com.mantra.spar"
+            manifestPlaceholders["appLabel"] = if (ghBuild) "Spar GH" else "@string/app_name"
+            versionCode = appVersion
+            versionName = appVersion.toString()
+            buildConfigField("String", "SITE", "\"spar.hr\"")
+            buildConfigField("String", "AGENT", "\"SparLocator\"")
+            buildConfigField("String", "STORES_URL", "\"https://www.spar.hr/lokacije/_jcr_content.stores.v2.html\"")
+            buildConfigField("String", "STORES_FILE", "\"spar_stores.json\"")
+            buildConfigField("long", "BUILT_IN_AT", "1793551380000L")
+            buildConfigField("String", "RELEASES", if (ghBuild)
+                "\"https://github.com/markoboskoauroville/spar_locator/releases?q=spar-gh-v&expanded=true\""
+                else "\"https://github.com/markoboskoauroville/spar_locator/releases/latest\"")
+        }
+        create("dm") {
+            dimension = "shop"
+            applicationId = if (ghBuild) "com.mantra.dmfinder.gh" else "com.mantra.dmfinder"
+            manifestPlaceholders["appLabel"] = "@string/app_name"
+            versionCode = dmVersion
+            versionName = dmVersion.toString()
+            buildConfigField("String", "SITE", "\"dm.hr\"")
+            buildConfigField("String", "AGENT", "\"DMFinder\"")
+            buildConfigField("String", "STORES_URL",
+                "\"https://store-data-service.services.dmtech.com/stores/bbox/46.6,13.4,42.3,19.5?countryCode=HR\"")
+            buildConfigField("String", "STORES_FILE", "\"dm_stores.json\"")
+            // When the built-in list was read: 2.11.2026, 08:31 in Zagreb.
+            buildConfigField("long", "BUILT_IN_AT", "1793604668000L")
+            buildConfigField("String", "RELEASES", "\"https://github.com/markoboskoauroville/spar_locator/releases?q=dm-v&expanded=true\"")
+        }
     }
 
     sourceSets {
-        getByName("main") {
-            res.srcDirs("src/main/res", versionIconDir)
-        }
+        getByName("spar") { res.srcDirs(sparIcon) }
+        getByName("dm") { res.srcDirs(dmIcon) }
     }
 
     signingConfigs {

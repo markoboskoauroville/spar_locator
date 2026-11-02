@@ -24,7 +24,7 @@ class Source(private val context: Context) {
 
     data class Loaded(val stores: List<Store>, val origin: Origin, val at: Long)
 
-    private val saved = File(context.filesDir, "spar_stores.json")
+    private val saved = File(context.filesDir, ASSET)
 
     /** What is on the phone already: the kept answer, else the built-in one. Never the network. */
     fun local(): Loaded {
@@ -50,7 +50,7 @@ class Source(private val context: Context) {
         }
         val stores = runCatching { Stores.parse(text) }.getOrNull()
         if (stores == null || stores.size < Stores.ENOUGH) {
-            lastProblem = "spar.hr did not send the store list"
+            lastProblem = "${BuildConfig.SITE} did not send the store list"
             return null
         }
         saved.writeText(text)
@@ -71,7 +71,7 @@ class Source(private val context: Context) {
         }
         try {
             val code = open.responseCode
-            if (code != HttpURLConnection.HTTP_OK) throw java.io.IOException("spar.hr answered $code")
+            if (code != HttpURLConnection.HTTP_OK) throw java.io.IOException("${BuildConfig.SITE} answered $code")
             return open.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
         } finally {
             open.disconnect()
@@ -79,13 +79,15 @@ class Source(private val context: Context) {
     }
 
     companion object {
-        const val URL_STORES = "https://www.spar.hr/lokacije/_jcr_content.stores.v2.html"
-        const val ASSET = "spar_stores.json"
+        // Each shop's own, from its flavour in app/build.gradle.kts (spar: spar.hr's list; dm: the
+        // store service behind dm.hr's store finder, Croatia only).
+        const val URL_STORES = BuildConfig.STORES_URL
+        const val ASSET = BuildConfig.STORES_FILE
 
-        /** When the built-in list was read from spar.hr: 1.11.2026, 17:43 in Zagreb. */
-        const val BUILT_IN_AT = 1_793_551_380_000L
+        /** When the built-in list was read (spar 1.11.2026 17:43, dm 2.11.2026), in ms. */
+        const val BUILT_IN_AT = BuildConfig.BUILT_IN_AT
 
-        val USER_AGENT = "SparLocator/${BuildConfig.VERSION_NAME} (+https://github.com/markoboskoauroville/spar_locator)"
+        val USER_AGENT = "${BuildConfig.AGENT}/${BuildConfig.VERSION_NAME} (+https://github.com/markoboskoauroville/spar_locator)"
 
         /** A list older than this is asked for again when the app comes back to the front. */
         const val STALE_MS = 3L * 60 * 60 * 1000

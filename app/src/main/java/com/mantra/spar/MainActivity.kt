@@ -175,7 +175,7 @@ class MainActivity : ComponentActivity() {
         val l = loaded ?: return ""
         val at = Instant.ofEpochMilli(l.at).atZone(Stores.ZONE).toLocalDateTime().format(STAMP)
         val said = when (l.origin) {
-            Source.Origin.LIVE -> "spar.hr $at"
+            Source.Origin.LIVE -> "${BuildConfig.SITE} $at"
             Source.Origin.SAVED -> "saved $at"
             Source.Origin.BUILT_IN -> "built in $at"
         }

@@ -1,5 +1,20 @@
 # Handover — Spar Locator
 
+## DM Finder and the GitHub builds (2.11.2026, phone session)
+
+- **Two flavours** (`app/build.gradle.kts`, dimension `shop`): `spar` (com.mantra.spar, appVersion)
+  and `dm` (com.mantra.dmfinder, dmVersion, "DM Finder"). Same code; each flavour has its list URL,
+  site name, built-in list (`src/<flavour>/assets`) and icon template (`src/main/icon`, `src/dm/icon`).
+- **dm's data**: `https://store-data-service.services.dmtech.com/stores/bbox/46.6,13.4,42.3,19.5?countryCode=HR`,
+  the service behind dm.hr's store finder: 179 stores, 76 kB gzipped, week (weekDay 1=Mon…, Sunday
+  absent = shut), extraClosingDates (holidays), extraOpeningDays (open Sundays), closingDate.
+  `Stores.parse` tells the shapes apart (dm: an object with "stores"). Tests: 5 dm cases.
+- **Mac: the build command changed.** `./gradlew assembleSparDebug` for Spar Locator
+  (`assembleDebug` now builds both). Outputs under `app/build/outputs/apk/spar/`.
+- **GitHub** (`build-gh-edition.yml`, on push): Spar GH (com.mantra.spar.gh) as release
+  `spar-gh-vN`, DM Finder (com.mantra.dmfinder.gh) as `dm-vN`, GitHub's own key
+  (secret SPAR_GH_KEYSTORE). `build-apk.yml` (Mac-key fallback) now builds the spar flavour.
+
 ## v3 (2.11.2026, phone session) — request 2 done in code, NOT YET COMPILED
 
 Marko asked again on the phone: "the pin between plus and minus shows my current location, instead

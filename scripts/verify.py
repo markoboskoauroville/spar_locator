@@ -82,12 +82,16 @@ check(titles_with_close == 1 and "fun Panel(" in screens, "every panel's close c
 props = (ROOT / "gradle.properties").read_text()
 m = re.search(r"^appVersion=(\d+)\s*$", props, re.M)
 check(m is not None, "appVersion in gradle.properties is a whole number")
-check("<!--VERSION-->" in (ROOT / "app/src/main/icon/ic_launcher_foreground.xml").read_text(),
-      "the icon template has its VERSION line (version-visible.md)")
+check(re.search(r"^dmVersion=(\d+)\s*$", props, re.M) is not None, "dmVersion in gradle.properties is a whole number")
+for t in ["app/src/main/icon/ic_launcher_foreground.xml", "app/src/dm/icon/ic_launcher_foreground.xml"]:
+    check("<!--VERSION-->" in (ROOT / t).read_text(), f"{t} has its VERSION line (version-visible.md)")
 
 # 7. The version row opens the latest build of THIS repository (version-visible.md §3).
-check("https://github.com/markoboskoauroville/spar_locator/releases/latest" in screens,
-      "the version row links to this repository's latest release")
+gradle = (ROOT / "app/build.gradle.kts").read_text()
+check("LATEST_BUILD = BuildConfig.RELEASES" in screens
+      and "https://github.com/markoboskoauroville/spar_locator/releases/latest" in gradle
+      and "releases?q=dm-v" in gradle,
+      "the version row links to this repository's releases, each app to its own")
 
 # 8. The app asks for the network and the phone's location, nothing else. Location since v3:
 #    Marko, 1.11.2026, "the pin key = my location by GPS"; asked only when the pin is pressed.
@@ -107,9 +111,15 @@ for p in ROOT.rglob("*"):
 check(scanned >= 20 and keys == 0, f"files scanned for key shapes: {scanned}, keys found: {keys}")
 
 # 10. The built-in store list is spar.hr's list, not a Cloudflare page.
-asset = (ROOT / "app/src/main/assets/spar_stores.json").read_text(encoding="utf-8")
+asset = (ROOT / "app/src/spar/assets/spar_stores.json").read_text(encoding="utf-8")
 check(asset.lstrip().startswith("[") and asset.count('"locationId"') >= 50,
       f"the built-in list holds {asset.count(chr(34) + 'locationId' + chr(34))} stores")
 
 print(f"verify.py: {passed} checks passed, {len(failures)} failed")
 sys.exit(1 if failures else 0)
+
+# 11. dm's built-in list is dm's answer for Croatia (an object holding "stores"), not an error page.
+import json as _json
+dm = _json.loads((ROOT / "app/src/dm/assets/dm_stores.json").read_text(encoding="utf-8"))
+dm_hr = [x for x in dm.get("stores", []) if x.get("countryCode") == "HR"]
+check(len(dm_hr) >= 50 and len(dm_hr) == len(dm["stores"]), f"the built-in dm list holds {len(dm_hr)} Croatian stores")

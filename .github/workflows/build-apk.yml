@@ -86,10 +86,10 @@ jobs:
       - name: "Test 1 — the mechanism"
         run: |
           set -uo pipefail
-          ./gradlew :app:testReleaseUnitTest --no-daemon || true
+          ./gradlew :app:testSparReleaseUnitTest --no-daemon || true
           python3 - <<'EOF'
           import glob, sys, xml.etree.ElementTree as ET
-          files = glob.glob("app/build/test-results/testReleaseUnitTest/*.xml")
+          files = glob.glob("app/build/test-results/testSparReleaseUnitTest/*.xml")
           total = fails = errors = 0
           for f in files:
               r = ET.parse(f).getroot()
@@ -124,12 +124,12 @@ jobs:
           fi
 
       - name: Build the release APK
-        run: ./gradlew :app:assembleRelease --no-daemon
+        run: ./gradlew :app:assembleSparRelease --no-daemon
 
       - name: "Gate G2 — scan the built APK"
         run: |
           set -euo pipefail
-          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          APK=$(find app/build/outputs/apk/spar/release -name '*.apk' | head -1)
           echo "scanning: $APK ($(stat -c%s "$APK") bytes)"
           HITS=$(strings -a "$APK" | grep -acE '(AQ\.|gsk_|AIza|ghp_|github_pat_|sk-ant-|xox[baprs]-)[A-Za-z0-9_-]{20,}' || true)
           [ "$HITS" = "0" ] || { echo "a key-shaped string is in the APK"; exit 1; }
@@ -140,7 +140,7 @@ jobs:
           V: ${{ steps.provenance.outputs.version }}
         run: |
           set -euo pipefail
-          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          APK=$(find app/build/outputs/apk/spar/release -name '*.apk' | head -1)
           AAPT=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort | tail -1)
           BADGE=$("$AAPT" dump badging "$APK")
           CODE=$(echo "$BADGE" | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p")
@@ -158,7 +158,7 @@ jobs:
           KIND: ${{ steps.signing.outputs.kind }}
         run: |
           set -euo pipefail
-          APK=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
+          APK=$(find app/build/outputs/apk/spar/release -name '*.apk' | head -1)
           OUT="${V}-spar-locator-v${V}.apk"
           cp "$APK" "$OUT"
           if gh release view "v${V}" >/dev/null 2>&1; then

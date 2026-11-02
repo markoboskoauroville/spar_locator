@@ -198,4 +198,59 @@ class StoresTest {
         assertTrue(box[0] > 45.6 && box[2] < 46.0)
         assertNull(Stores.bounds(emptyList()))
     }
+
+    // --- dm (DM Finder, 2.11.2026): dm's store service, 61 stores of its real answer --------------
+
+    private val dm: List<Store> by lazy { Stores.parse(resource("dm_2026-11-02.json")) }
+
+    private fun dmStore(id: String) = dm.first { it.id == id }
+
+    @Test fun `dm's answer is read`() {
+        assertEquals(61, dm.size)
+        dm.forEach {
+            assertTrue("${it.name} ${it.lat}", it.lat in 42.3..46.6)
+            assertTrue("${it.name} ${it.lon}", it.lon in 13.4..19.5)
+            assertTrue(it.name, it.name.startsWith("dm "))
+        }
+    }
+
+    @Test fun `a dm store's name, city and week`() {
+        val k = dmStore("K05K")
+        assertEquals("dm Supernova Karlovac", k.name)
+        assertEquals("Karlovac", k.city)
+        assertEquals("Prilaz V. Holjevca 12", k.address)
+        assertEquals(listOf(Span(9 * 60, 21 * 60)), k.week[0])
+        // Sunday is not in dm's list at all: shut.
+        assertTrue(k.week[6].isEmpty())
+        assertTrue(Stores.isOpen(k, at("2026-11-04T20:59")))
+        assertFalse(Stores.isOpen(k, at("2026-11-04T21:00")))
+        assertFalse(Stores.isOpen(k, at("2026-11-08T12:00")))
+    }
+
+    @Test fun `dm's holiday and open Sunday`() {
+        val k = dmStore("K05K")
+        // 18.11.2026, Remembrance Day, a Wednesday: shut.
+        assertFalse(Stores.isOpen(k, at("2026-11-18T12:00")))
+        // 29.11.2026, a Sunday dm opens.
+        assertTrue(Stores.isOpen(k, at("2026-11-29T12:00")))
+    }
+
+    @Test fun `a dm store that closes for good`() {
+        val s = dmStore("K08M")
+        val date = s.closed!!.from
+        assertEquals(Stores.FOREVER, s.closed!!.to)
+        assertTrue(Stores.hoursOn(s, date).isEmpty())
+        assertTrue(Stores.hoursOn(s, date.plusYears(1)).isEmpty())
+    }
+
+    @Test fun `dm keeps only Croatia`() {
+        val two = """{"stores":[
+            {"storeId":"A","countryCode":"SI","location":{"lat":46.0,"lon":14.5},"address":{"street":"x","city":"LJUBLJANA"},"openingHours":[]},
+            {"storeId":"B","countryCode":"HR","location":{"lat":45.8,"lon":16.0},"address":{"street":"Ilica 1","city":"ZAGREB"},
+             "openingHours":[{"weekDay":7,"timeRanges":[{"opening":"10:00","closing":"24:00"}]}]}]}"""
+        val got = Stores.parse(two)
+        assertEquals(listOf("B"), got.map { it.id })
+        assertEquals("dm Ilica 1", got[0].name)
+        assertEquals(listOf(Span(600, 1440)), got[0].week[6])
+    }
 }

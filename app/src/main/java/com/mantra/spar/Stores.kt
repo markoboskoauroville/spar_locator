@@ -17,6 +17,11 @@ import java.util.Locale
  * Croatia, each with its weekly hours, its date overrides (public holidays, the Sundays a shop
  * may open) and a temporary closure (a renovation). Read 1.11.2026; the shape is in
  * scripts/sample-store.json.
+ *
+ * THE SAME FOR dm (DM Finder, 2.11.2026): dm's own store service, the one behind dm.hr's store
+ * finder, answers every dm in Croatia with its week, its holidays (extraClosingDates), its open
+ * Sundays (extraOpeningDays) and a last day (closingDate). [parse] tells the two answers apart by
+ * their shape: spar.hr sends a list, dm an object with "stores" in it.
  */
 
 /** One stretch of opening, in minutes after midnight. [close] of 1440 is "until midnight". */
@@ -57,6 +62,7 @@ object Stores {
      * "Just a moment" page is HTML), so a caller keeps what it had instead of an empty map.
      */
     fun parse(text: String): List<Store> {
+        if (text.trimStart().startsWith("{")) return parseDm(JSONObject(text))
         val array = JSONArray(text)
         val out = ArrayList<Store>(array.length())
         for (i in 0 until array.length()) {
@@ -107,6 +113,107 @@ object Stores {
             special = special,
             closed = closed,
         )
+    }
+
+    // --- dm ------------------------------------------------------------------------------------
+
+    /** The last day of a store that closes for good: the closure reaches to the end of time. */
+    val FOREVER: LocalDate = LocalDate.of(9999, 12, 31)
+
+    private fun parseDm(root: JSONObject): List<Store> {
+        val array = root.getJSONArray("stores")
+        val out = ArrayList<Store>(array.length())
+        for (i in 0 until array.length()) {
+            val o = array.optJSONObject(i) ?: continue
+            if (o.optString("countryCode", "HR") != "HR") continue
+            dmStore(o)?.let { out.add(it) }
+        }
+        return out
+    }
+
+    private fun dmStore(o: JSONObject): Store? {
+        val at = o.optJSONObject("location") ?: return null
+        val lat = at.optDouble("lat", Double.NaN)
+        val lon = at.optDouble("lon", Double.NaN)
+        if (lat.isNaN() || lon.isNaN() || (lat == 0.0 && lon == 0.0)) return null
+        val a = o.optJSONObject("address") ?: JSONObject()
+
+        // weekDay 1 is Monday ... 7 Sunday; a day that is not listed is a day it does not open.
+        val week = MutableList<List<Span>>(7) { emptyList() }
+        o.optJSONArray("openingHours")?.let { days ->
+            for (i in 0 until days.length()) {
+                val d = days.optJSONObject(i) ?: continue
+                val n = d.optInt("weekDay", 0)
+                if (n in 1..7) week[n - 1] = dmSpans(d.optJSONArray("timeRanges"))
+            }
+        }
+        val special = HashMap<LocalDate, List<Span>>()
+        o.optJSONArray("extraOpeningDays")?.let { days ->
+            for (i in 0 until days.length()) {
+                val d = days.optJSONObject(i) ?: continue
+                val date = isoDate(d.optString("date", "")) ?: continue
+                special[date] = dmSpans(d.optJSONArray("timeRanges"))
+            }
+        }
+        // Closed dates last: a holiday wins over anything else said about the same day.
+        o.optJSONArray("extraClosingDates")?.let { days ->
+            for (i in 0 until days.length()) {
+                val date = isoDate(days.optJSONObject(i)?.optString("date", "").orEmpty()) ?: continue
+                special[date] = emptyList()
+            }
+        }
+        // closingDate is read as the first day shut: wrongly "shut" on a last day costs less than
+        // wrongly "open" on a first shut one, which sends somebody to a dark door.
+        val closing = isoDate(o.optString("closingDate", ""))
+        val opening = isoDate(o.optString("openingDate", ""))
+        val closed = when {
+            closing != null -> Closure(closing, FOREVER, "closing for good")
+            opening != null && opening.isAfter(LocalDate.now(ZONE)) ->
+                Closure(LocalDate.of(2000, 1, 1), opening.minusDays(1), "opens ${opening.dayOfMonth}.${opening.monthValue}.")
+            else -> null
+        }
+
+        val street = clean(a.optString("street", ""))
+        val place = clean(a.optString("streetAdditional", ""))
+        return Store(
+            id = o.optString("storeId", ""),
+            name = "dm " + (if (place.isNotEmpty()) cityName(place) else street),
+            big = false,
+            address = street,
+            city = cityName(a.optString("city", "")),
+            zip = clean(a.optString("zip", "")),
+            lat = lat,
+            lon = lon,
+            phone = clean(o.optString("phone", "")),
+            week = week,
+            special = special,
+            closed = closed,
+        )
+    }
+
+    private fun isoDate(s: String): LocalDate? =
+        if (s.isBlank()) null else runCatching { LocalDate.parse(s.trim().take(10)) }.getOrNull()
+
+    /** "09:00"–"21:00" into minutes; "24:00", "00:00" or a time before the opening is midnight. */
+    private fun dmSpans(ranges: JSONArray?): List<Span> {
+        if (ranges == null) return emptyList()
+        val out = ArrayList<Span>(1)
+        for (i in 0 until ranges.length()) {
+            val r = ranges.optJSONObject(i) ?: continue
+            val open = hhmm(r.optString("opening", "")) ?: continue
+            var close = hhmm(r.optString("closing", "")) ?: continue
+            if (close <= open) close = 24 * 60
+            out.add(Span(open, close))
+        }
+        return out
+    }
+
+    private fun hhmm(s: String): Int? {
+        val parts = s.trim().split(":")
+        if (parts.size < 2) return null
+        val h = parts[0].toIntOrNull() ?: return null
+        val m = parts[1].toIntOrNull() ?: return null
+        return (h * 60 + m).coerceIn(0, 24 * 60)
     }
 
     /** spar.hr's dates count months from 0 (java.util.Calendar): month 10 is November. */

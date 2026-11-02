@@ -54,8 +54,8 @@ sealed interface Face {
     data class Shop(val store: Store) : Face
 }
 
-/** The repository's latest build: the version row's hidden link (version-visible.md §3). */
-const val LATEST_BUILD = "https://github.com/markoboskoauroville/spar_locator/releases/latest"
+/** This app's builds: the version row's hidden link (version-visible.md §3); per flavour, in app/build.gradle.kts. */
+const val LATEST_BUILD = BuildConfig.RELEASES
 
 /** The firm bar under the key row: ground at 86 % (Trail v92: thin bars lose their icons). */
 private val Firm = Color(0xDB0B0D10)
@@ -216,7 +216,8 @@ fun StorePanel(
             }
             Stores.closedFor(store, today)?.let { c ->
                 val why = if (c.info.isNotBlank()) " · ${c.info}" else ""
-                Line("Closed$why · until ${c.to.format(DAY)}", Paint.Red, size = 13, bold = true)
+                val until = if (c.to == Stores.FOREVER) "" else " · until ${c.to.format(DAY)}"
+                Line("Closed$why$until", Paint.Red, size = 13, bold = true)
             }
             Spacer(Modifier.size(6.dp))
             val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
